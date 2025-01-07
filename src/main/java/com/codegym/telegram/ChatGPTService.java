@@ -70,7 +70,7 @@ public class ChatGPTService {
      */
     private String sendMessagesToChatGPT() {
         ChatCompletion chatCompletion = ChatCompletion.builder()
-                .model("gpt-3.5-turbo") //  gpt-4o,  gpt-4-turbo,    gpt-3.5-turbo
+                .model("gpt-4-turbo") //  gpt-4o,  gpt-4-turbo,    gpt-3.5-turbo
                 .messages(messageHistory)
                 .maxTokens(3000)
                 .temperature(0.9)
