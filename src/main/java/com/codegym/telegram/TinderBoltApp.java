@@ -115,6 +115,7 @@ public class TinderBoltApp extends SimpleTelegramBot {
       sendPhotoMessage("message");
       sendTextButtonsMessage(text, "message_next", "write next message",
                                       "message_date", "Ask for a date");
+      messages.clear();
     }
 
     public void messageButton(){
@@ -125,21 +126,17 @@ public class TinderBoltApp extends SimpleTelegramBot {
       var myMessage = sendTextMessage("chatGPT is typing...");
       String answer = chatGPT.sendMessage(prompt, history);
       updateTextMessage(myMessage, answer);
-      
     }
 
     public void messageDialog(){
       String text = getMessageText();
       messages.add(text);
-
     }
 
     @Override
     public void onInitialize() {
-        //y un poco más aquí :)
         addMessageHandler(this::hello);
         //addButtonHandler("^.*", this::helloButton);
-        
         addCommandHandler("start", this::startCommand);
         addCommandHandler("gpt", this::gptCommand);
         addCommandHandler("date", this::dateCommand);
