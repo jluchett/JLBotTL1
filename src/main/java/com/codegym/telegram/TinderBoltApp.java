@@ -8,8 +8,8 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 public class TinderBoltApp extends SimpleTelegramBot {
 
-    public static final String TELEGRAM_BOT_TOKEN = "tl_tk"; //añadir el token del bot entre comillas
-    public static final String OPEN_AI_TOKEN = "oia_tk"; //añadir el token de ChatGPT entre comillas
+    public static final String TELEGRAM_BOT_TOKEN = "token-telg"; //añadir el token del bot entre comillas
+    public static final String OPEN_AI_TOKEN = "token-ai"; //añadir el token de ChatGPT entre comillas
 
     private DialogMode mode;
     private ChatGPTService chatGPT = new ChatGPTService(OPEN_AI_TOKEN);
@@ -30,17 +30,20 @@ public class TinderBoltApp extends SimpleTelegramBot {
       }else if (mode == DialogMode.MESSAGE){
         messageDialog();
         return;
-      }else{
+      }else if (mode == DialogMode.PROFILE){
+        profileDialog();
+        return;
+      }else if (mode == DialogMode.OPENER){
+        openerDialog();
+        return;
+      } else {
         String text = getMessageText();
         sendTextMessage("*Hello world*");
         sendTextMessage("_How are you?_");
         sendTextMessage("You wrote: " + text);
-
         sendPhotoMessage("avatar_main");
-
         sendTextButtonsMessage("Launch process", "start", "Start", "stop", "Stop");
       }
-      
     }
 
     public void helloButton(){
@@ -133,6 +136,82 @@ public class TinderBoltApp extends SimpleTelegramBot {
       messages.add(text);
     }
 
+    public void profileCommand(){
+      mode = DialogMode.PROFILE;
+      String text = loadMessage("profile");
+      sendPhotoMessage("profile");
+      sendTextMessage(text);
+      sendTextMessage("Introduce tu nombre");
+      user = new UserInfo();
+      questionIndex = 0;
+    }
+
+    private UserInfo user = new UserInfo();
+    private int questionIndex = 0;
+
+    public void profileDialog(){
+      String text = getMessageText();
+      questionIndex++;
+      switch (questionIndex) {
+        case 1:
+          user.name = text;
+          sendTextMessage(user.name + ", cual es tu edad?");
+          break;
+        case 2:
+          user.age = text;
+          sendTextMessage(user.name + ", cual es tu hobby?");
+          break;
+        case 3:
+          user.hobby = text;
+          sendTextMessage(user.name + ", cual es tu objetivo del perfil ?");
+          break;
+        default:
+          user.goals = text;
+          String prompt = loadPrompt("profile");
+          String userInfo = user.toString();
+          var myMessage = sendTextMessage("chatGPT is typing...");
+          String answer = chatGPT.sendMessage(prompt, userInfo);
+          updateTextMessage(myMessage, answer);
+      } 
+    }
+
+    public void openerCommand(){
+      mode = DialogMode.OPENER;
+      String text = loadMessage("opener");
+      sendPhotoMessage("opener");
+      sendTextMessage(text);
+
+      sendTextMessage("Introduce el nombre de la persona");
+      user = new UserInfo();
+      questionIndex = 0;
+    }
+
+    public void openerDialog(){
+      String text = getMessageText();
+      questionIndex++;
+      switch (questionIndex) {
+        case 1:
+          user.name = text;
+          sendTextMessage("Cual es la edad de " + user.name + "?");
+          break;
+        case 2:
+          user.age = text;
+          sendTextMessage("En que trabaja " + user.name + "?");
+          break;
+        case 3:
+          user.occupation = text;
+          sendTextMessage("Cual es el hobby de " + user.name + "?");
+          break;
+        default:
+          user.hobby = text;
+          String prompt = loadPrompt("opener");
+          String userInfo = user.toString();
+          var myMessage = sendTextMessage("chatGPT is typing...");
+          String answer = chatGPT.sendMessage(prompt, userInfo);
+          updateTextMessage(myMessage, answer);
+      }
+    }
+
     @Override
     public void onInitialize() {
         addMessageHandler(this::hello);
@@ -143,6 +222,8 @@ public class TinderBoltApp extends SimpleTelegramBot {
         addButtonHandler("^date_.*", this::dateButton);
         addCommandHandler("message", this::messageCommand);
         addButtonHandler("^message_.*", this::messageButton);
+        addCommandHandler("profile", this::profileCommand);
+        addCommandHandler("opener", this::openerCommand);
     }
 
     public static void main(String[] args) throws TelegramApiException {
